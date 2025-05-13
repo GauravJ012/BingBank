@@ -1,0 +1,5 @@
+package com.bingbank.authService.model;
+
+public class OTP {
+
+}

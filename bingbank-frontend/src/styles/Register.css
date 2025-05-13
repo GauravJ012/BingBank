@@ -1,0 +1,131 @@
+.register-container {
+  min-height: 100vh;
+  padding: 40px 15px;
+  background: linear-gradient(135deg, #F5F7FA 0%, #EBEFF5 100%);
+}
+
+.brand-name {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: #102B4C;
+  margin-bottom: 5px;
+  letter-spacing: 0.5px;
+}
+
+.brand-tagline {
+  color: #5E6E82;
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin-bottom: 30px;
+}
+
+.register-card {
+  border-radius: 20px;
+  border: none;
+  overflow: hidden;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  margin-bottom: 40px;
+}
+
+.register-card:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  transform: translateY(-5px);
+}
+
+.register-card .card-body {
+  padding: 40px;
+}
+
+.register-card .card-footer {
+  background-color: #FFFFFF;
+  border-top: 1px solid #EDF2F7;
+  padding: 15px;
+}
+
+.register-card h2 {
+  color: #102B4C;
+  font-weight: 700;
+  font-size: 1.8rem;
+  margin-bottom: 30px;
+}
+
+.form-control {
+  border-radius: 10px;
+  padding: 12px 15px;
+  border: 1px solid #E2E8F0;
+  background-color: #F8FAFC;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #00A3FF;
+  box-shadow: 0 0 0 3px rgba(0, 163, 255, 0.15);
+}
+
+.form-label {
+  font-weight: 500;
+  color: #5E6E82;
+  margin-bottom: 8px;
+}
+
+.form-check-input:checked {
+  background-color: #00A3FF;
+  border-color: #00A3FF;
+}
+
+.text-danger {
+  color: #EF4444;
+  font-size: 0.85rem;
+  margin-top: 5px;
+}
+
+.register-button {
+  background: linear-gradient(135deg, #00CCFF 0%, #00A3FF 100%);
+  border: none;
+  padding: 14px;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  margin-top: 10px;
+}
+
+.register-button:hover {
+  background: linear-gradient(135deg, #00A3FF 0%, #007ACC 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 163, 255, 0.4);
+}
+
+.register-button:disabled {
+  background: linear-gradient(135deg, #A5D8F7 0%, #7ECBFF 100%);
+  transform: none;
+  box-shadow: none;
+}
+
+.card-footer a {
+  color: #00A3FF;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.card-footer a:hover {
+  color: #007ACC;
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .register-card .card-body {
+    padding: 25px;
+  }
+  
+  .brand-name {
+    font-size: 2.2rem;
+  }
+  
+  .register-card h2 {
+    font-size: 1.5rem;
+  }
+}

@@ -1,0 +1,21 @@
+package com.bingbank.authService.repository;
+
+import com.netbanking.auth.model.Customer;
+import com.netbanking.auth.model.OTP;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface OTPRepository extends JpaRepository<OTP, Long> {
+    
+    @Query("SELECT o FROM OTP o WHERE o.customer = ?1 AND o.purpose = ?2 AND o.verified = false AND o.expiresAt > ?3 ORDER BY o.createdAt DESC")
+    List<OTP> findValidOTPForCustomer(Customer customer, String purpose, LocalDateTime now);
+    
+    Optional<OTP> findByCustomerAndOtpCodeAndPurposeAndVerifiedFalseAndExpiresAtGreaterThan(
+            Customer customer, String otpCode, String purpose, LocalDateTime now);
+}

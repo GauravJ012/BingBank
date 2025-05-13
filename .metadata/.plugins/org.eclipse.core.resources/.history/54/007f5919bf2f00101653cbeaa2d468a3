@@ -1,0 +1,79 @@
+package com.bingbank.authService.service;
+
+import com.bingbank.authService.model.Customer;
+import com.bingbank.authService.model.OTP;
+import com.bingbank.authService.repository.OTPRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import javax.mail.MessagingException;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+
+@Service
+public class OTPService {
+
+    private static final String LOGIN_PURPOSE = "LOGIN";
+    private static final int OTP_LENGTH = 6;
+
+    @Value("${app.otp-expiration-minutes}")
+    private int otpExpirationMinutes;
+
+    @Autowired
+    private OTPRepository otpRepository;
+
+    @Autowired
+    private EmailService emailService;
+
+    public OTP generateAndSendOTP(Customer customer, String purpose) throws MessagingException {
+        // Invalidate any existing OTPs
+        invalidateExistingOTPs(customer, purpose);
+        
+        // Generate new OTP
+        String otpCode = generateOTP();
+        
+        // Save OTP to database
+        OTP otp = new OTP();
+        otp.setCustomer(customer);
+        otp.setOtpCode(otpCode);
+        otp.setPurpose(purpose);
+        otp.setExpiresAt(LocalDateTime.now().plusMinutes(otpExpirationMinutes));
+        otp.setVerified(false);
+        
+        otpRepository.save(otp);
+        
+        // Send OTP via email
+        emailService.sendOtpEmail(customer.getEmail(), otpCode);
+        
+        return otp;
+    }
+
+    public boolean validateOTP(Customer customer, String otpCode, String purpose) {
+        Optional<OTP> otpOptional = otpRepository.findByCustomerAndOtpCodeAndPurposeAndVerifiedFalseAndExpiresAtGreaterThan(
+                customer, otpCode, purpose, LocalDateTime.now());
+        
+        if (otpOptional.isPresent()) {
+            OTP otp = otpOptional.get();
+            otp.setVerified(true);
+            otpRepository.save(otp);
+            return true;
+        }
+        
+        return false;
+    }
+
+    private void invalidateExistingOTPs(Customer customer, String purpose) {
+        List<OTP> existingOTPs = otpRepository.findValidOTPForCustomer(customer, purpose, LocalDateTime.now());
+        for (OTP otp : existingOTPs) {
+            otp.setVerified(true); // Mark as verified to invalidate
+            otpRepository.save(otp);
+        }
+    }
+
+    private String generateOTP() {
+        return String.format("%06d", new Random().nextInt(999999));
+    }
+}

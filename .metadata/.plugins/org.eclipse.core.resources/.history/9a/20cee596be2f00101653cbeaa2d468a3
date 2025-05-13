@@ -1,0 +1,5 @@
+package com.bingbank.authService.security;
+
+public class JwtAuthenticationFilter {
+
+}

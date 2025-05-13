@@ -1,0 +1,225 @@
+.dashboard-container {
+  display: flex;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 280px;
+  padding: 30px;
+  background-color: #F5F7FA;
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+}
+
+body.sidebar-collapsed .main-content {
+  margin-left: 70px;
+}
+
+.bank-header {
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+}
+
+.bank-header h1 {
+  font-weight: 700;
+  color: #102B4C;
+  margin: 0;
+  font-size: 1.7rem;
+  letter-spacing: 0.5px;
+}
+
+.info-card, .balance-card, .transaction-card {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.info-card:hover, .balance-card:hover, .transaction-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.info-card {
+  background: linear-gradient(135deg, #102B4C 0%, #164D71 100%);
+  color: white;
+}
+
+.balance-card {
+  background: linear-gradient(135deg, #00CCFF 0%, #00A3FF 100%);
+  color: white;
+}
+
+.transaction-card .card-header {
+  background-color: #FFFFFF;
+  border-bottom: 1px solid #EDF2F7;
+  padding: 20px 25px;
+}
+
+.transaction-card .card-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #102B4C;
+}
+
+.customer-name {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 25px;
+  color: #FFFFFF;
+  letter-spacing: 0.5px;
+}
+
+.info-item {
+  margin-bottom: 15px;
+}
+
+.info-label {
+  display: block;
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin-bottom: 3px;
+  font-weight: 500;
+}
+
+.info-value {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.balance-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+
+.balance-amount {
+  font-size: 3.5rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.balance-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.transaction-table {
+  background-color: white;
+}
+
+.transaction-table thead th {
+  background-color: #F8FAFC;
+  color: #5E6E82;
+  font-weight: 600;
+  border: none;
+  padding: 15px;
+  font-size: 0.9rem;
+}
+
+.transaction-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.transaction-table tbody tr:hover {
+  background-color: rgba(0, 163, 255, 0.05);
+}
+
+.transaction-type {
+  padding: 6px 12px;
+  border-radius: 30px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.transaction-type.withdraw {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #EF4444;
+}
+
+.transaction-type.transfer {
+  background-color: rgba(79, 70, 229, 0.15);
+  color: #4F46E5;
+}
+
+.transaction-type.credited {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+}
+
+tr.withdraw {
+  border-left: 4px solid #EF4444;
+}
+
+tr.transfer {
+  border-left: 4px solid #4F46E5;
+}
+
+tr.credited {
+  border-left: 4px solid #10B981;
+}
+
+.transaction-table td {
+  padding: 15px;
+  font-size: 0.95rem;
+  vertical-align: middle;
+}
+
+.transaction-card .card-body {
+  padding: 0;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #00CCFF 0%, #00A3FF 100%);
+  border: none;
+  padding: 10px 20px;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  margin: 25px 0;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #00A3FF 0%, #007ACC 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 163, 255, 0.4);
+}
+
+.loading, .error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-size: 1.5rem;
+  color: #5E6E82;
+}
+
+.error {
+  color: #EF4444;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 70px;
+    padding: 20px 15px;
+  }
+  
+  .balance-container {
+    flex-direction: column;
+    align-items: start;
+  }
+  
+  .balance-amount {
+    margin-bottom: 20px;
+    font-size: 2.5rem;
+  }
+  
+  .customer-name {
+    font-size: 1.8rem;
+  }
+}

@@ -1,0 +1,209 @@
+.sidebar {
+  width: 280px;
+  height: 100vh;
+  background: linear-gradient(180deg, #102B4C 0%, #164D71 100%);
+  color: #fff;
+  position: fixed;
+  left: 0;
+  top: 0;
+  transition: all 0.3s ease;
+  box-shadow: 3px 0 20px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar-toggle {
+  position: absolute;
+  top: 20px;
+  right: -12px;
+  background: #fff;
+  color: #102B4C;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+  background: #00A3FF;
+  color: white;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  padding: 30px 25px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.bank-logo {
+  width: 45px;
+  height: 45px;
+  background: linear-gradient(135deg, #00CCFF 0%, #00A3FF 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  margin-right: 15px;
+  box-shadow: 0 4px 10px rgba(0, 163, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.logo-container h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar.collapsed .logo-container {
+  padding: 20px 0;
+  justify-content: center;
+}
+
+.sidebar.collapsed .logo-container h2 {
+  opacity: 0;
+  width: 0;
+  margin: 0;
+}
+
+.menu {
+  margin-top: 20px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 25px;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
+  margin-bottom: 2px;
+  white-space: nowrap;
+}
+
+.menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-left: 3px solid #00CCFF;
+}
+
+.menu-item.active {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-left: 3px solid #00CCFF;
+}
+
+.icon {
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+  opacity: 0.9;
+  flex-shrink: 0;
+}
+
+.menu-text {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar.collapsed .menu-item {
+  padding: 14px 0;
+  justify-content: center;
+}
+
+.sidebar.collapsed .icon {
+  margin-right: 0;
+}
+
+.sidebar.collapsed .menu-text {
+  opacity: 0;
+  width: 0;
+  margin: 0;
+}
+
+.menu-footer {
+  margin-top: auto;
+  padding: 20px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logout-item {
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.logout-item:hover {
+  background-color: rgba(255, 0, 0, 0.1);
+  border-left: 3px solid #FF5A5A;
+}
+
+/* Update main content margin when sidebar is collapsed */
+body.sidebar-collapsed .main-content {
+  margin-left: 70px;
+}
+
+/* Responsive styles remain, but we'll now use the collapsed class for control */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 70px;
+  }
+  
+  .sidebar .logo-container {
+    justify-content: center;
+    padding: 20px 0;
+  }
+  
+  .sidebar .logo-container h2 {
+    opacity: 0;
+    width: 0;
+    margin: 0;
+  }
+  
+  .sidebar .menu-item {
+    justify-content: center;
+    padding: 14px 0;
+  }
+  
+  .sidebar .icon {
+    margin-right: 0;
+  }
+  
+  .sidebar .menu-text {
+    opacity: 0;
+    width: 0;
+    margin: 0;
+  }
+  
+  .main-content {
+    margin-left: 70px;
+  }
+  
+  .sidebar-toggle {
+    display: none; /* Hide toggle button on mobile */
+  }
+}
