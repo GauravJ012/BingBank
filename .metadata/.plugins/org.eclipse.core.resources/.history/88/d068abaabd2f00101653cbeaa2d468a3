@@ -1,5 +1,0 @@
-package com.bingbank.authService.dto;
-
-public class RegisterRequest {
-
-}

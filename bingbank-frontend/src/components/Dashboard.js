@@ -11,8 +11,8 @@ const MOCK_ACCOUNT = {
   accountNumber: "556704",
   accountType: "Saving",
   balance: 950.00,
-  branch: "Bhind",
-  ifscCode: "BHI001"
+  branch: "Binghamton",
+  routingNumber: "1003005"
 };
 
 const MOCK_TRANSACTIONS = [
@@ -187,7 +187,7 @@ const Dashboard = () => {
           <Card className="balance-card mb-4">
             <Card.Body>
               <div className="balance-container">
-                <div className="balance-amount">₹{account.balance.toFixed(2)}</div>
+                <div className="balance-amount">${account.balance.toFixed(2)}</div>
                 <div className="balance-info">
                   <div className="info-item">
                     <span className="info-label">Account Number:</span>
@@ -202,8 +202,8 @@ const Dashboard = () => {
                     <span className="info-value">{account.branch}</span>
                   </div>
                   <div className="info-item">
-                    <span className="info-label">IFSC Code:</span>
-                    <span className="info-value">{account.ifscCode}</span>
+                    <span className="info-label">Routing Number:</span>
+                    <span className="info-value">{account.routingNumber}</span>
                   </div>
                 </div>
               </div>
@@ -231,7 +231,7 @@ const Dashboard = () => {
                   {transactions.map(transaction => (
                     <tr key={transaction.id} className={transaction.type.toLowerCase()}>
                       <td>{transaction.id}</td>
-                      <td>₹{transaction.amount.toFixed(2)}</td>
+                      <td>${transaction.amount.toFixed(2)}</td>
                       <td>
                         <span className={`transaction-type ${transaction.type.toLowerCase()}`}>
                           {transaction.type}
