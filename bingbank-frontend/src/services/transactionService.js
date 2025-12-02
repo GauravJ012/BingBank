@@ -1,90 +1,151 @@
 import axios from 'axios';
 import authService from './authService';
 
-const API_URL = 'http://localhost:8083/api/transactions';
+// API URL - Connect to the API Gateway
+const API_URL = 'http://localhost:8080/api/transactions';
 
-// Set up interceptor for auth token
-axios.interceptors.request.use(
-  config => {
+// Debug logging
+const debug = true;
+
+/**
+ * Get latest 5 transactions for dashboard
+ * @param {string} accountNumber 
+ * @returns {Promise}
+ */
+const getLatestTransactions = async (accountNumber) => {
+  try {
+    if (debug) console.log('[Transaction Service] Fetching latest transactions for:', accountNumber);
+    
     const token = authService.getToken();
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+    if (!token) {
+      console.error('[Transaction Service] No token available');
+      throw new Error('Authentication required');
     }
-    return config;
-  },
-  error => {
-    return Promise.reject(error);
-  }
-);
-
-/**
- * Get recent transactions for the current customer
- * @param {number} limit - Number of transactions to retrieve
- * @returns {Promise<Array>} List of transactions
- */
-const getRecentTransactions = async (limit = 5) => {
-  try {
-    const accountId = authService.getUser().accountId;
-    const response = await axios.get(`${API_URL}/account/${accountId}/recent?limit=${limit}`);
+    
+    const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+    
+    const response = await axios.get(`${API_URL}/latest/${accountNumber}`, {
+      headers: {
+        'Authorization': authHeader
+      }
+    });
+    
+    if (debug) console.log('[Transaction Service] Latest transactions received:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error fetching recent transactions:', error);
+    console.error('[Transaction Service] Error fetching latest transactions:', error);
     throw error;
   }
 };
 
 /**
- * Get all transactions for the current customer with pagination
- * @param {number} page - Page number (0-based)
- * @param {number} size - Page size
- * @returns {Promise<Object>} Paginated transactions
+ * Get all transactions for an account
+ * @param {string} accountNumber 
+ * @returns {Promise}
  */
-const getAllTransactions = async (page = 0, size = 10) => {
+const getAllTransactions = async (accountNumber) => {
   try {
-    const accountId = authService.getUser().accountId;
-    const response = await axios.get(`${API_URL}/account/${accountId}?page=${page}&size=${size}`);
+    if (debug) console.log('[Transaction Service] Fetching all transactions for:', accountNumber);
+    
+    const token = authService.getToken();
+    if (!token) {
+      console.error('[Transaction Service] No token available');
+      throw new Error('Authentication required');
+    }
+    
+    const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+    
+    const response = await axios.get(`${API_URL}/account/${accountNumber}`, {
+      headers: {
+        'Authorization': authHeader
+      }
+    });
+    
+    if (debug) console.log('[Transaction Service] All transactions received:', response.data.length);
     return response.data;
   } catch (error) {
-    console.error('Error fetching all transactions:', error);
+    console.error('[Transaction Service] Error fetching all transactions:', error);
     throw error;
   }
 };
 
 /**
- * Get transaction details by ID
- * @param {number} transactionId - Transaction ID
- * @returns {Promise<Object>} Transaction details
+ * Get filtered transactions
+ * @param {Object} filterRequest 
+ * @returns {Promise}
  */
-const getTransactionById = async (transactionId) => {
+const getFilteredTransactions = async (filterRequest) => {
   try {
-    const response = await axios.get(`${API_URL}/${transactionId}`);
+    if (debug) console.log('[Transaction Service] Filtering transactions:', filterRequest);
+    
+    const token = authService.getToken();
+    if (!token) {
+      console.error('[Transaction Service] No token available');
+      throw new Error('Authentication required');
+    }
+    
+    const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+    
+    const response = await axios.post(`${API_URL}/filter`, filterRequest, {
+      headers: {
+        'Authorization': authHeader,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (debug) console.log('[Transaction Service] Filtered transactions received:', response.data.length);
     return response.data;
   } catch (error) {
-    console.error('Error fetching transaction details:', error);
+    console.error('[Transaction Service] Error filtering transactions:', error);
     throw error;
   }
 };
 
 /**
- * Transfer money to another account
- * @param {Object} transferData - Transfer data
- * @returns {Promise<Object>} Transaction result
+ * Download bank statement PDF
+ * @param {Object} statementRequest 
  */
-const transferMoney = async (transferData) => {
+const downloadStatement = async (statementRequest) => {
   try {
-    const response = await axios.post(`${API_URL}/transfer`, transferData);
-    return response.data;
+    if (debug) console.log('[Transaction Service] Generating statement:', statementRequest);
+    
+    const token = authService.getToken();
+    if (!token) {
+      console.error('[Transaction Service] No token available');
+      throw new Error('Authentication required');
+    }
+    
+    const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+    
+    const response = await axios.post(`${API_URL}/statement/pdf`, statementRequest, {
+      headers: {
+        'Authorization': authHeader,
+        'Content-Type': 'application/json'
+      },
+      responseType: 'blob' // Important for PDF download
+    });
+    
+    // Create download link
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `bank_statement_${statementRequest.accountNumber}_${new Date().toISOString().split('T')[0]}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    
+    if (debug) console.log('[Transaction Service] Statement downloaded successfully');
   } catch (error) {
-    console.error('Error transferring money:', error);
+    console.error('[Transaction Service] Error downloading statement:', error);
     throw error;
   }
 };
 
 const transactionService = {
-  getRecentTransactions,
+  getLatestTransactions,
   getAllTransactions,
-  getTransactionById,
-  transferMoney
+  getFilteredTransactions,
+  downloadStatement
 };
 
 export default transactionService;

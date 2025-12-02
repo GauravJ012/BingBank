@@ -6,50 +6,7 @@ import '../styles/Dashboard.css';
 import Sidebar from './Sidebar';
 import authService from '../services/authService';
 import accountService from '../services/accountService';
-
-// Mock data only for transactions until that microservice is ready
-const MOCK_TRANSACTIONS = [
-  {
-    id: 21,
-    amount: 50.00,
-    type: "Withdraw",
-    date: "2023-07-23",
-    sourceAccount: "556704",
-    targetAccount: "N/A"
-  },
-  {
-    id: 20,
-    amount: 70.00,
-    type: "Transfer",
-    date: "2023-07-23",
-    sourceAccount: "556704",
-    targetAccount: "707290"
-  },
-  {
-    id: 19,
-    amount: 70.00,
-    type: "Credited",
-    date: "2023-07-23",
-    sourceAccount: "552398",
-    targetAccount: "556704"
-  },
-  {
-    id: 18,
-    amount: 590.00,
-    type: "Transfer",
-    date: "2023-07-23",
-    sourceAccount: "556704",
-    targetAccount: "552398"
-  },
-  {
-    id: 17,
-    amount: 0.00,
-    type: "Credited",
-    date: "2023-07-23",
-    sourceAccount: "236480",
-    targetAccount: "556704"
-  }
-];
+import transactionService from '../services/transactionService';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -114,12 +71,14 @@ const Dashboard = () => {
         
         // Fetch account details from ACCOUNT SERVICE
         console.log("Fetching accounts for customer ID:", customerId);
+        let accountNumber = null;
         try {
           const accounts = await accountService.getAccountsByCustomerId(customerId);
           console.log("Accounts received:", accounts);
           
           if (accounts && accounts.length > 0) {
             setAccount(accounts[0]);
+            accountNumber = accounts[0].accountNumber;
           } else {
             console.warn("No accounts found");
           }
@@ -127,8 +86,22 @@ const Dashboard = () => {
           console.error("Error fetching account data:", err);
         }
         
-        // Set mock transactions
-        setTransactions(MOCK_TRANSACTIONS);
+        // Fetch latest 5 transactions from TRANSACTION SERVICE
+        if (accountNumber) {
+          console.log("Fetching latest transactions for account:", accountNumber);
+          try {
+            const latestTransactions = await transactionService.getLatestTransactions(accountNumber);
+            console.log("Latest transactions received:", latestTransactions);
+            setTransactions(latestTransactions);
+          } catch (err) {
+            console.error("Error fetching transactions:", err);
+            // Set empty array on error so dashboard still loads
+            setTransactions([]);
+          }
+        } else {
+          console.warn("No account number available for fetching transactions");
+          setTransactions([]);
+        }
         
         setLoading(false);
         console.log("=== Dashboard Initialization Complete ===");
@@ -263,10 +236,10 @@ const Dashboard = () => {
             </Card>
           )}
           
-          {/* CARD 3: Transaction History (Mock data for now) */}
+          {/* CARD 3: Transaction History from TRANSACTION SERVICE */}
           <Card className="transaction-card">
             <Card.Header>
-              <h3>Transaction History</h3>
+              <h3>Recent Transaction History</h3>
             </Card.Header>
             <Card.Body>
               {transactions.length > 0 ? (
@@ -284,17 +257,22 @@ const Dashboard = () => {
                     </thead>
                     <tbody>
                       {transactions.map(transaction => (
-                        <tr key={transaction.id} className={transaction.type.toLowerCase()}>
-                          <td>{transaction.id}</td>
-                          <td>₹{transaction.amount.toFixed(2)}</td>
+                        <tr 
+                          key={transaction.transactionId} 
+                          className={transaction.transactionType.toLowerCase()}
+                        >
+                          <td>{transaction.transactionId}</td>
+                          <td className={transaction.transactionType === 'CREDIT' ? 'text-success' : 'text-danger'}>
+                            {transaction.transactionType === 'CREDIT' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                          </td>
                           <td>
-                            <span className={`transaction-type ${transaction.type.toLowerCase()}`}>
-                              {transaction.type}
+                            <span className={`transaction-type ${transaction.transactionType.toLowerCase()}`}>
+                              {transaction.transactionType}
                             </span>
                           </td>
-                          <td>{new Date(transaction.date).toLocaleDateString()}</td>
-                          <td>{transaction.sourceAccount}</td>
-                          <td>{transaction.targetAccount}</td>
+                          <td>{new Date(transaction.transactionDate).toLocaleDateString('en-GB')}</td>
+                          <td>{transaction.sourceAccountNumber}</td>
+                          <td>{transaction.targetAccountNumber || 'N/A'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -310,6 +288,11 @@ const Dashboard = () => {
               ) : (
                 <div className="text-center py-4">
                   <p>No transaction history available.</p>
+                  {account && (
+                    <p className="text-muted">
+                      Your account is active, but no transactions have been recorded yet.
+                    </p>
+                  )}
                 </div>
               )}
             </Card.Body>

@@ -7,6 +7,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
+import Transactions from './components/Transactions'; 
 import PrivateRoute from './components/PrivateRoute';
 import authService from './services/authService';
 
@@ -59,6 +60,14 @@ function App() {
                 <Dashboard />
               </PrivateRoute>
             } 
+          />
+          <Route
+            path="/transactions"
+            element={
+              <PrivateRoute>
+                <Transactions />
+              </PrivateRoute>
+            }
           />
           {/* Add routes for other pages here, all protected with PrivateRoute */}
         </Routes>
