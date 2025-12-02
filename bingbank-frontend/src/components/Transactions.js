@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Table, Form, Row, Col, Button, Badge } from 'react-bootstrap';
+import { Container, Card, Table, Form, Row, Col, Button, Badge, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import authService from '../services/authService';
@@ -14,6 +14,7 @@ const Transactions = () => {
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [selectedTransactions, setSelectedTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [tableLoading, setTableLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // Filter states
@@ -83,7 +84,9 @@ const Transactions = () => {
     if (!account) return;
 
     try {
-      setLoading(true);
+      setTableLoading(true);
+      setError(null);
+      
       const filterRequest = {
         accountNumber: account.accountNumber,
         startDate: filters.startDate || null,
@@ -99,12 +102,12 @@ const Transactions = () => {
 
       const filtered = await transactionService.getFilteredTransactions(filterRequest);
       setFilteredTransactions(filtered);
-      setSelectedTransactions([]); // Clear selections when filtering
-      setLoading(false);
+      setSelectedTransactions([]);
+      setTableLoading(false);
     } catch (err) {
       console.error("Error filtering transactions:", err);
-      setError("Failed to filter transactions");
-      setLoading(false);
+      setError("Failed to connect to server. Please try again.");
+      setTableLoading(false);
     }
   };
 
@@ -122,17 +125,45 @@ const Transactions = () => {
     });
     setFilteredTransactions(transactions);
     setSelectedTransactions([]);
+    setError(null);
   };
 
-  const handleSort = (column) => {
+  const handleSort = async (column) => {
     const newDirection = filters.sortBy === column && filters.sortDirection === 'ASC' ? 'DESC' : 'ASC';
-    setFilters(prev => ({
-      ...prev,
+    
+    const updatedFilters = {
+      ...filters,
       sortBy: column,
       sortDirection: newDirection
-    }));
-    // Automatically apply filters when sorting
-    setTimeout(() => applyFilters(), 100);
+    };
+    
+    setFilters(updatedFilters);
+    
+    if (!account) return;
+
+    try {
+      setTableLoading(true);
+      const filterRequest = {
+        accountNumber: account.accountNumber,
+        startDate: updatedFilters.startDate || null,
+        endDate: updatedFilters.endDate || null,
+        minAmount: updatedFilters.minAmount ? parseFloat(updatedFilters.minAmount) : null,
+        maxAmount: updatedFilters.maxAmount ? parseFloat(updatedFilters.maxAmount) : null,
+        transactionType: updatedFilters.transactionType || null,
+        otherAccountNumber: updatedFilters.otherAccountNumber || null,
+        limit: updatedFilters.limit ? parseInt(updatedFilters.limit) : null,
+        sortBy: updatedFilters.sortBy,
+        sortDirection: updatedFilters.sortDirection
+      };
+
+      const filtered = await transactionService.getFilteredTransactions(filterRequest);
+      setFilteredTransactions(filtered);
+      setSelectedTransactions([]);
+      setTableLoading(false);
+    } catch (err) {
+      console.error("Error sorting transactions:", err);
+      setTableLoading(false);
+    }
   };
 
   const handleSelectTransaction = (transactionId) => {
@@ -168,7 +199,7 @@ const Transactions = () => {
       await transactionService.downloadStatement(statementRequest);
     } catch (err) {
       console.error("Error downloading statement:", err);
-      alert("Failed to download statement");
+      alert("Failed to download statement. Please try again.");
     }
   };
 
@@ -185,12 +216,15 @@ const Transactions = () => {
         alignItems: 'center', 
         height: '100vh' 
       }}>
-        <div>Loading transactions...</div>
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+        <div className="ms-3">Loading transactions...</div>
       </div>
     );
   }
 
-  if (error) {
+  if (error && !account) {
     return (
       <div className="error-container" style={{ 
         display: 'flex', 
@@ -234,6 +268,15 @@ const Transactions = () => {
                     <strong>Total Transactions:</strong> {filteredTransactions.length}
                   </Col>
                 </Row>
+              </Card.Body>
+            </Card>
+          )}
+
+          {/* Error Alert */}
+          {error && (
+            <Card className="mb-4 border-danger">
+              <Card.Body className="text-danger">
+                {error}
               </Card.Body>
             </Card>
           )}
@@ -333,10 +376,10 @@ const Transactions = () => {
                     </Form.Group>
                   </Col>
                   <Col md={3} className="d-flex align-items-end">
-                    <Button variant="primary" onClick={applyFilters} className="me-2">
+                    <Button variant="primary" onClick={applyFilters} className="me-2" disabled={tableLoading}>
                       Apply Filters
                     </Button>
-                    <Button variant="secondary" onClick={resetFilters}>
+                    <Button variant="secondary" onClick={resetFilters} disabled={tableLoading}>
                       Reset
                     </Button>
                   </Col>
@@ -377,7 +420,12 @@ const Transactions = () => {
               <h5>Transactions</h5>
             </Card.Header>
             <Card.Body>
-              {filteredTransactions.length > 0 ? (
+              {tableLoading ? (
+                <div className="text-center py-5">
+                  <Spinner animation="border" variant="primary" />
+                  <p className="mt-3">Loading transactions...</p>
+                </div>
+              ) : filteredTransactions.length > 0 ? (
                 <Table responsive hover className="transaction-table">
                   <thead>
                     <tr>
@@ -415,7 +463,7 @@ const Transactions = () => {
                             {transaction.transactionType}
                           </Badge>
                         </td>
-                        <td className={transaction.transactionType === 'CREDIT' ? 'text-success' : 'text-danger'}>
+                        <td className={transaction.transactionType === 'CREDIT' ? 'text-success fw-bold' : 'text-danger fw-bold'}>
                           {transaction.transactionType === 'CREDIT' ? '+' : '-'}${transaction.amount.toFixed(2)}
                         </td>
                         <td>{transaction.sourceAccountNumber}</td>
@@ -425,8 +473,16 @@ const Transactions = () => {
                   </tbody>
                 </Table>
               ) : (
-                <div className="text-center py-4">
-                  <p>No transactions found matching the criteria.</p>
+                <div className="text-center py-5">
+                  <h5>No Transactions Found</h5>
+                  <p className="text-muted">
+                    No transactions match your current filter criteria.
+                    <br />
+                    Try adjusting your filters or reset to see all transactions.
+                  </p>
+                  <Button variant="outline-primary" onClick={resetFilters} className="mt-3">
+                    Reset Filters
+                  </Button>
                 </div>
               )}
             </Card.Body>

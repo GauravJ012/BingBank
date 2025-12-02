@@ -7,5 +7,5 @@ import java.util.List;
 public class StatementRequest {
     private Long customerId;
     private String accountNumber;
-    private List<Long> transactionIds; // Specific transactions to include
+    private List<Long> transactionIds;
 }
