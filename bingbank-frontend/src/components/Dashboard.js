@@ -5,16 +5,9 @@ import { FaArrowRight } from 'react-icons/fa';
 import '../styles/Dashboard.css';
 import Sidebar from './Sidebar';
 import authService from '../services/authService';
+import accountService from '../services/accountService';
 
-// Mock data only for account and transactions until those microservices are ready
-const MOCK_ACCOUNT = {
-  accountNumber: "556704",
-  accountType: "Saving",
-  balance: 950.00,
-  branch: "Binghamton",
-  routingNumber: "1003005"
-};
-
+// Mock data only for transactions until that microservice is ready
 const MOCK_TRANSACTIONS = [
   {
     id: 21,
@@ -65,85 +58,132 @@ const Dashboard = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [authChecked, setAuthChecked] = useState(false);
 
-  // First check if user is authenticated
   useEffect(() => {
-    const checkAuth = () => {
+    const initializeDashboard = async () => {
+      console.log("=== Dashboard Initialization Started ===");
+      
+      // Wait a moment for any redirects/storage to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Check authentication
       const isAuth = authService.isAuthenticated();
-      console.log("Auth check on dashboard:", isAuth);
+      console.log("Authentication check:", isAuth);
       
       if (!isAuth) {
-        console.log("User not authenticated, redirecting to login");
-        navigate('/login');
-        return false;
+        console.log("Not authenticated, redirecting to login");
+        navigate('/login', { replace: true });
+        return;
       }
       
-      setAuthChecked(true);
-      return true;
-    };
-    
-    checkAuth();
-  }, [navigate]);
-
-  // Then fetch data if authenticated
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!authChecked) return;
+      // Get user data from localStorage
+      const userData = authService.getUser();
+      console.log("User data from localStorage:", userData);
+      
+      if (!userData || !userData.id) {
+        console.error("Invalid user data");
+        setError("User data is missing. Please login again.");
+        setLoading(false);
+        setTimeout(() => {
+          authService.logout();
+        }, 2000);
+        return;
+      }
+      
+      // Set initial customer data
+      setCustomer(userData);
+      const customerId = userData.id;
       
       try {
         setLoading(true);
-        console.log("Fetching dashboard data...");
         
-        // Get authenticated user data
-        const userData = authService.getUser();
-        console.log("User data from localStorage:", userData);
-        
-        if (!userData || !userData.id) {
-          console.error("Invalid user data");
-          setError("User data is missing or invalid");
-          setLoading(false);
-          return;
-        }
-        
-        // Set initial user data from localStorage
-        setCustomer(userData);
-        
-        // Get more detailed customer data if needed
+        // Fetch customer details from AUTH SERVICE
+        console.log("Fetching customer details for ID:", customerId);
         try {
-          // Make an API call to get full customer details
-          console.log("Fetching detailed customer info for ID:", userData.id);
-          const customerResponse = await authService.getCustomerDetails(userData.id);
-          console.log("Detailed customer data:", customerResponse.data);
-          setCustomer(prevCustomer => ({
-            ...prevCustomer,
-            ...customerResponse.data
-          }));
-        } catch (customerErr) {
-          // If API fails, keep using data from localStorage
-          console.warn("Couldn't fetch detailed customer info:", customerErr);
-          // We already set customer from localStorage, so no need to do it again
+          const customerResponse = await authService.getCustomerDetails(customerId);
+          if (customerResponse && customerResponse.data) {
+            console.log("Customer data received:", customerResponse.data);
+            setCustomer(customerResponse.data);
+          } else {
+            console.log("No detailed customer data, using localStorage data");
+          }
+        } catch (err) {
+          console.warn("Error fetching customer details:", err);
+          // Continue with localStorage data
         }
         
-        // Until account service is ready, use mock data
-        setAccount(MOCK_ACCOUNT);
+        // Fetch account details from ACCOUNT SERVICE
+        console.log("Fetching accounts for customer ID:", customerId);
+        try {
+          const accounts = await accountService.getAccountsByCustomerId(customerId);
+          console.log("Accounts received:", accounts);
+          
+          if (accounts && accounts.length > 0) {
+            setAccount(accounts[0]);
+          } else {
+            console.warn("No accounts found");
+          }
+        } catch (err) {
+          console.error("Error fetching account data:", err);
+        }
+        
+        // Set mock transactions
         setTransactions(MOCK_TRANSACTIONS);
         
         setLoading(false);
+        console.log("=== Dashboard Initialization Complete ===");
       } catch (err) {
-        console.error("Error loading dashboard data:", err);
-        setError("Failed to load dashboard data. Please try again later.");
+        console.error("Error initializing dashboard:", err);
+        setError("Failed to load dashboard data.");
         setLoading(false);
       }
     };
     
-    fetchData();
-  }, [authChecked]);
+    initializeDashboard();
+  }, [navigate]);
 
-  if (!authChecked) return <div className="loading">Checking authentication...</div>;
-  if (loading) return <div className="loading">Loading dashboard data...</div>;
-  if (error) return <div className="error">{error}</div>;
-  if (!customer) return <div className="error">No customer data available</div>;
+  if (loading) {
+    return (
+      <div className="loading-container" style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh' 
+      }}>
+        <div>Loading dashboard...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="error-container" style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        flexDirection: 'column'
+      }}>
+        <div className="error">{error}</div>
+        <Button onClick={() => navigate('/login')} style={{ marginTop: '20px' }}>
+          Go to Login
+        </Button>
+      </div>
+    );
+  }
+
+  if (!customer) {
+    return (
+      <div className="error-container" style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh' 
+      }}>
+        <div>No customer data available</div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-container">
@@ -154,7 +194,7 @@ const Dashboard = () => {
             <h1>Welcome to BingBank</h1>
           </div>
           
-          {/* Customer Information Card */}
+          {/* CARD 1: Customer Information from AUTH SERVICE */}
           <Card className="info-card mb-4">
             <Card.Body>
               <h2 className="customer-name">Hi, {customer.firstName || ''} {customer.lastName || ''}</h2>
@@ -172,7 +212,7 @@ const Dashboard = () => {
                 <Col md={6}>
                   <div className="info-item">
                     <span className="info-label">Phone Number</span>
-                    <span className="info-value">{customer.mobile || customer.phoneNumber || 'Not provided'}</span>
+                    <span className="info-value">{customer.mobile || 'Not provided'}</span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Address</span>
@@ -183,74 +223,95 @@ const Dashboard = () => {
             </Card.Body>
           </Card>
           
-          {/* Account Details Card */}
-          <Card className="balance-card mb-4">
-            <Card.Body>
-              <div className="balance-container">
-                <div className="balance-amount">${account.balance.toFixed(2)}</div>
-                <div className="balance-info">
-                  <div className="info-item">
-                    <span className="info-label">Account Number:</span>
-                    <span className="info-value">{account.accountNumber}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Account Type:</span>
-                    <span className="info-value">{account.accountType}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Branch:</span>
-                    <span className="info-value">{account.branch}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Routing Number:</span>
-                    <span className="info-value">{account.routingNumber}</span>
+          {/* CARD 2: Account Information from ACCOUNT SERVICE */}
+          {account ? (
+            <Card className="balance-card mb-4">
+              <Card.Body>
+                <div className="balance-container">
+                  <div className="balance-amount">${Number(account.balance).toFixed(2)}</div>
+                  <div className="balance-info">
+                    <div className="info-item">
+                      <span className="info-label">Account Number:</span>
+                      <span className="info-value">{account.accountNumber}</span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Account Type:</span>
+                      <span className="info-value">{account.accountType}</span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Branch Code:</span>
+                      <span className="info-value">
+                        {account.branch ? account.branch.branchCode : 'N/A'}
+                      </span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Routing Number:</span>
+                      <span className="info-value">{account.routingNumber}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Card.Body>
-          </Card>
+              </Card.Body>
+            </Card>
+          ) : (
+            <Card className="balance-card mb-4">
+              <Card.Body>
+                <div className="text-center py-4">
+                  <h3>No Account Information Available</h3>
+                  <p>Please contact customer support to link your account.</p>
+                </div>
+              </Card.Body>
+            </Card>
+          )}
           
-          {/* Transaction History Card */}
+          {/* CARD 3: Transaction History (Mock data for now) */}
           <Card className="transaction-card">
             <Card.Header>
               <h3>Transaction History</h3>
             </Card.Header>
             <Card.Body>
-              <Table responsive className="transaction-table">
-                <thead>
-                  <tr>
-                    <th>Transaction ID</th>
-                    <th>Amount</th>
-                    <th>Transaction Type</th>
-                    <th>Transaction Date</th>
-                    <th>Source Account</th>
-                    <th>Target Account</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.map(transaction => (
-                    <tr key={transaction.id} className={transaction.type.toLowerCase()}>
-                      <td>{transaction.id}</td>
-                      <td>${transaction.amount.toFixed(2)}</td>
-                      <td>
-                        <span className={`transaction-type ${transaction.type.toLowerCase()}`}>
-                          {transaction.type}
-                        </span>
-                      </td>
-                      <td>{new Date(transaction.date).toLocaleDateString()}</td>
-                      <td>{transaction.sourceAccount}</td>
-                      <td>{transaction.targetAccount}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-              <div className="text-center">
-                <Link to="/transactions">
-                  <Button variant="primary">
-                    See All Transactions <FaArrowRight />
-                  </Button>
-                </Link>
-              </div>
+              {transactions.length > 0 ? (
+                <>
+                  <Table responsive className="transaction-table">
+                    <thead>
+                      <tr>
+                        <th>Transaction ID</th>
+                        <th>Amount</th>
+                        <th>Transaction Type</th>
+                        <th>Transaction Date</th>
+                        <th>Source Account</th>
+                        <th>Target Account</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {transactions.map(transaction => (
+                        <tr key={transaction.id} className={transaction.type.toLowerCase()}>
+                          <td>{transaction.id}</td>
+                          <td>₹{transaction.amount.toFixed(2)}</td>
+                          <td>
+                            <span className={`transaction-type ${transaction.type.toLowerCase()}`}>
+                              {transaction.type}
+                            </span>
+                          </td>
+                          <td>{new Date(transaction.date).toLocaleDateString()}</td>
+                          <td>{transaction.sourceAccount}</td>
+                          <td>{transaction.targetAccount}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                  <div className="text-center">
+                    <Link to="/transactions">
+                      <Button variant="primary">
+                        See All Transactions <FaArrowRight />
+                      </Button>
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-4">
+                  <p>No transaction history available.</p>
+                </div>
+              )}
             </Card.Body>
           </Card>
         </Container>

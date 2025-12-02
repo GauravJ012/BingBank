@@ -1,14 +1,10 @@
 package com.bingbank.accountservice.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class BranchDTO {
-    private Long branchId;
+    private Integer branchId;
     private String branchName;
     private String branchCode;
     private String city;

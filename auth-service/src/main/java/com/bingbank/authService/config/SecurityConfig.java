@@ -15,18 +15,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-
-
-import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity  // Replaces deprecated @EnableGlobalMethodSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
@@ -65,7 +58,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .cors(cors -> cors.disable())  // CRITICAL: Disable CORS
             .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
@@ -76,22 +69,5 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
-    }
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // Explicit origin
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("authorization", "content-type", "x-auth-token"));
-        configuration.setExposedHeaders(List.of("x-auth-token"));
-        configuration.setAllowCredentials(true); // Allow cookies/auth headers
-        configuration.setAllowedOriginPatterns(List.of("http://localhost:3000", "https://*.yourdomain.com"));
-
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-
-        return source;
     }
 }

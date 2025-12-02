@@ -11,7 +11,7 @@
     <groupId>com.bingbank</groupId>
     <artifactId>account-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <n>account-service</n>
+    <name>account-service</name>
     <description>Account Service for BingBank</description>
     
     <properties>

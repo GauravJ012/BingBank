@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API URL - Connect to your actual backend
-const API_URL = 'http://localhost:8081/api/auth';
+const API_URL = 'http://localhost:8080/api/auth';
 
 // Debug logging 
 const debug = true;

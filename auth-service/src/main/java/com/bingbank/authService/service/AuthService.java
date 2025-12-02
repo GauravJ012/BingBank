@@ -1,12 +1,15 @@
 package com.bingbank.authService.service;
 
+import com.bingbank.authService.client.AccountServiceClient;
 import com.bingbank.authService.dto.CustomerDTO;
 import com.bingbank.authService.dto.JwtAuthResponse;
 import com.bingbank.authService.dto.LoginRequest;
 import com.bingbank.authService.dto.RegisterRequest;
 import com.bingbank.authService.dto.VerifyOTPRequest;
 import com.bingbank.authService.model.Customer;
+import com.bingbank.authService.model.PendingRegistration;
 import com.bingbank.authService.repository.CustomerRepository;
+import com.bingbank.authService.repository.PendingRegistrationRepository;
 import com.bingbank.authService.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,18 +22,27 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 public class AuthService {
 
     private static final String LOGIN_PURPOSE = "LOGIN";
+    private static final String REGISTRATION_PURPOSE = "REGISTRATION";
 
     @Autowired
     private AuthenticationManager authenticationManager;
 
     @Autowired
     private CustomerRepository customerRepository;
+
+    @Autowired
+    private PendingRegistrationRepository pendingRegistrationRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -40,6 +52,12 @@ public class AuthService {
 
     @Autowired
     private OTPService otpService;
+    
+    @Autowired
+    private AccountServiceClient accountServiceClient;
+    
+    @Autowired
+    private EmailService emailService;
 
     public ResponseEntity<?> login(LoginRequest loginRequest) {
         try {
@@ -128,27 +146,107 @@ public class AuthService {
     }
 
     public ResponseEntity<?> register(RegisterRequest registerRequest) {
-        // Check if email exists
-        if (customerRepository.existsByEmail(registerRequest.getEmail())) {
-            return ResponseEntity.badRequest().body("Email already exists");
+        try {
+            // Check if email exists
+            if (customerRepository.existsByEmail(registerRequest.getEmail())) {
+                return ResponseEntity.badRequest().body("Email already exists");
+            }
+
+            // Check if account number exists and is valid
+            if (!accountServiceClient.accountExists(registerRequest.getAccountNumber())) {
+                return ResponseEntity.badRequest()
+                        .body("Invalid account number. Please contact customer support.");
+            }
+
+            // Generate OTP for registration verification
+            String otp = generateOTP();
+            
+            // Encode password before storing
+            String encodedPassword = passwordEncoder.encode(registerRequest.getPassword());
+            
+            // Create pending registration
+            PendingRegistration pendingRegistration = new PendingRegistration();
+            pendingRegistration.setEmail(registerRequest.getEmail());
+            pendingRegistration.setFirstName(registerRequest.getFirstName());
+            pendingRegistration.setLastName(registerRequest.getLastName());
+            pendingRegistration.setAge(registerRequest.getAge());
+            pendingRegistration.setGender(registerRequest.getGender());
+            pendingRegistration.setAddress(registerRequest.getAddress());
+            pendingRegistration.setMobile(registerRequest.getMobile());
+            pendingRegistration.setTwoFactorEnabled(registerRequest.getTwoFactorEnabled());
+            pendingRegistration.setPassword(encodedPassword);
+            pendingRegistration.setAccountNumber(registerRequest.getAccountNumber());
+            pendingRegistration.setOtpCode(otp);
+            pendingRegistration.setExpiresAt(LocalDateTime.now().plusMinutes(5));
+            
+            // Delete any existing pending registration for this email
+            pendingRegistrationRepository.findByEmail(registerRequest.getEmail())
+                    .ifPresent(existing -> pendingRegistrationRepository.delete(existing));
+            
+            // Save pending registration
+            pendingRegistrationRepository.save(pendingRegistration);
+            
+            // Send OTP email
+            try {
+                emailService.sendOtpEmail(registerRequest.getEmail(), otp);
+            } catch (MessagingException e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Failed to send OTP email. Please try again.");
+            }
+            
+            return ResponseEntity.ok()
+                    .body(Map.of(
+                        "message", "OTP has been sent to your email address for verification.",
+                        "email", registerRequest.getEmail()
+                    ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Registration failed: " + e.getMessage());
         }
+    }
 
-        // Create new customer
-        Customer customer = new Customer();
-        customer.setFirstName(registerRequest.getFirstName());
-        customer.setLastName(registerRequest.getLastName());
-        customer.setEmail(registerRequest.getEmail());
-        customer.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        customer.setAge(registerRequest.getAge());
-        customer.setGender(registerRequest.getGender());
-        customer.setAddress(registerRequest.getAddress());
-        customer.setMobile(registerRequest.getMobile());
-        customer.setTwoFactorEnabled(registerRequest.getTwoFactorEnabled());
+    @Transactional
+    public ResponseEntity<?> verifyRegistrationOTP(VerifyOTPRequest request) {
+        try {
+            // Get pending registration
+            PendingRegistration pendingRegistration = pendingRegistrationRepository
+                    .findByEmailAndOtpCodeAndExpiresAtGreaterThan(
+                            request.getEmail(), 
+                            request.getOtp(), 
+                            LocalDateTime.now()
+                    )
+                    .orElseThrow(() -> new RuntimeException("Invalid or expired OTP"));
+            
+            // Create new customer
+            Customer customer = new Customer();
+            customer.setFirstName(pendingRegistration.getFirstName());
+            customer.setLastName(pendingRegistration.getLastName());
+            customer.setEmail(pendingRegistration.getEmail());
+            customer.setPassword(pendingRegistration.getPassword()); // Already encoded
+            customer.setAge(pendingRegistration.getAge());
+            customer.setGender(pendingRegistration.getGender());
+            customer.setAddress(pendingRegistration.getAddress());
+            customer.setMobile(pendingRegistration.getMobile());
+            customer.setTwoFactorEnabled(pendingRegistration.getTwoFactorEnabled());
+            customer.setAccountNumber(pendingRegistration.getAccountNumber());
+            
+            if (pendingRegistration.getParentCustomerId() != null) {
+                Optional<Customer> parentCustomer = customerRepository.findById(
+                        pendingRegistration.getParentCustomerId());
+                parentCustomer.ifPresent(customer::setParentCustomer);
+            }
 
-        customerRepository.save(customer);
+            customerRepository.save(customer);
+            
+            // Delete pending registration
+            pendingRegistrationRepository.delete(pendingRegistration);
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Customer registered successfully");
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body("Customer registered successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Registration verification failed: " + e.getMessage());
+        }
     }
 
     public ResponseEntity<?> enable2FA(Long customerId, boolean enable) {
@@ -159,27 +257,21 @@ public class AuthService {
             customer.setTwoFactorEnabled(enable);
             customerRepository.save(customer);
             
-            return ResponseEntity.ok("Two-factor authentication " + (enable ? "enabled" : "disabled") + " successfully");
+            return ResponseEntity.ok("Two-factor authentication " + 
+                    (enable ? "enabled" : "disabled") + " successfully");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error updating 2FA settings: " + e.getMessage());
         }
     }
     
- // Add this method to your AuthService class
-
-    /**
-     * Get customer details by ID
-     * @param customerId The ID of the customer to retrieve
-     * @return ResponseEntity with customer details or error
-     */
     public ResponseEntity<?> getCustomerDetails(Long customerId) {
         try {
             // Find customer by ID
             Customer customer = customerRepository.findById(customerId)
                     .orElseThrow(() -> new RuntimeException("Customer not found with ID: " + customerId));
             
-            // Convert to DTO or use directly, depending on your implementation
+            // Convert to DTO
             CustomerDTO customerDTO = new CustomerDTO();
             customerDTO.setId(customer.getCustomerId());
             customerDTO.setFirstName(customer.getFirstName());
@@ -190,10 +282,18 @@ public class AuthService {
             customerDTO.setAge(customer.getAge());
             customerDTO.setGender(customer.getGender());
             customerDTO.setTwoFactorEnabled(customer.getTwoFactorEnabled());
+            customerDTO.setAccountNumber(customer.getAccountNumber()); // Include account number
             
             return ResponseEntity.ok(customerDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error retrieving customer details: " + e.getMessage());
         }
+    }
+    
+    // Helper method to generate OTP
+    private String generateOTP() {
+        Random random = new Random();
+        int otp = 100000 + random.nextInt(900000);
+        return String.valueOf(otp);
     }
 }

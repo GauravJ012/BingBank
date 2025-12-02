@@ -10,6 +10,7 @@ public class CustomerDTO {
     private Integer age;
     private String gender;
     private Boolean twoFactorEnabled;
+    private String accountNumber;
     
     // Getters and setters
     public Long getId() {
@@ -82,5 +83,13 @@ public class CustomerDTO {
     
     public void setTwoFactorEnabled(Boolean twoFactorEnabled) {
         this.twoFactorEnabled = twoFactorEnabled;
+    }
+    
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+    
+    public void setAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
     }
 }
