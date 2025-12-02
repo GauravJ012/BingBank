@@ -229,12 +229,6 @@ public class AuthService {
             customer.setMobile(pendingRegistration.getMobile());
             customer.setTwoFactorEnabled(pendingRegistration.getTwoFactorEnabled());
             customer.setAccountNumber(pendingRegistration.getAccountNumber());
-            
-            if (pendingRegistration.getParentCustomerId() != null) {
-                Optional<Customer> parentCustomer = customerRepository.findById(
-                        pendingRegistration.getParentCustomerId());
-                parentCustomer.ifPresent(customer::setParentCustomer);
-            }
 
             customerRepository.save(customer);
             

@@ -41,21 +41,9 @@ public class Customer {
     @Column(name = "two_factor_enabled")
     private Boolean twoFactorEnabled = false;
     
-    @ManyToOne
-    @JoinColumn(name = "parent_customer_id")
-    private Customer parentCustomer;
-    
     @Column(nullable = false)
     private String password;
     
     @Column(name = "account_number")
     private String accountNumber;
-    
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-    
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 }
