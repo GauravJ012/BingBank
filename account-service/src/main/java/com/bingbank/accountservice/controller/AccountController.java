@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,5 +60,77 @@ public class AccountController {
         Map<String, String> response = new HashMap<>();
         response.put("userId", userId != null ? userId : "No user ID in header");
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Debit amount from account
+     */
+    @PostMapping("/{accountNumber}/debit")
+    public ResponseEntity<?> debitAccount(
+            @PathVariable String accountNumber,
+            @RequestBody Map<String, Object> request) {
+        try {
+            System.out.println("AccountController: Debit request for account: " + accountNumber);
+            
+            BigDecimal amount = new BigDecimal(request.get("amount").toString());
+            String description = request.getOrDefault("description", "Debit").toString();
+            
+            AccountDTO updatedAccount = accountService.debitFromAccount(accountNumber, amount, description);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("newBalance", updatedAccount.getBalance());
+            response.put("message", "Amount debited successfully");
+            
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            System.err.println("AccountController: Error debiting account - " + e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        } catch (Exception e) {
+            System.err.println("AccountController: Unexpected error - " + e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", "Internal server error");
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
+    /**
+     * Credit amount to account
+     */
+    @PostMapping("/{accountNumber}/credit")
+    public ResponseEntity<?> creditAccount(
+            @PathVariable String accountNumber,
+            @RequestBody Map<String, Object> request) {
+        try {
+            System.out.println("AccountController: Credit request for account: " + accountNumber);
+            
+            BigDecimal amount = new BigDecimal(request.get("amount").toString());
+            String description = request.getOrDefault("description", "Credit").toString();
+            
+            AccountDTO updatedAccount = accountService.creditToAccount(accountNumber, amount, description);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("newBalance", updatedAccount.getBalance());
+            response.put("message", "Amount credited successfully");
+            
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            System.err.println("AccountController: Error crediting account - " + e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        } catch (Exception e) {
+            System.err.println("AccountController: Unexpected error - " + e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", "Internal server error");
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
     }
 }

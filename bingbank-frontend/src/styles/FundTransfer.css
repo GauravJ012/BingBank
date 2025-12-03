@@ -1,0 +1,370 @@
+/* Fund Transfer Page Styling */
+
+.fund-transfer-page {
+  padding: 20px;
+}
+
+/* Transfer Form Card */
+.transfer-form-card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  border: none;
+}
+
+.transfer-form-card .card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  border: none;
+  padding: 16px 20px;
+}
+
+.transfer-form-card .card-header h5 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.transfer-form-card .card-body {
+  padding: 24px;
+}
+
+/* Form Styling */
+.transfer-form-card .form-label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.transfer-form-card .form-control:focus,
+.transfer-form-card .form-select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.transfer-form-card .form-control:disabled {
+  background-color: #e9ecef;
+  cursor: not-allowed;
+}
+
+/* Info Card */
+.info-card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  border: none;
+  height: 100%;
+}
+
+.info-card .card-header {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  padding: 16px 20px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.info-card .card-header h5 {
+  margin: 0;
+  font-weight: 600;
+  color: #333;
+}
+
+.info-card .card-body {
+  padding: 24px;
+}
+
+/* Transfer Info List */
+.transfer-info-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.transfer-info-list li {
+  padding: 8px 0;
+  padding-left: 24px;
+  position: relative;
+  color: #495057;
+}
+
+.transfer-info-list li:before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #28a745;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+/* History Card */
+.history-card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  border: none;
+}
+
+.history-card .card-header {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  padding: 16px 20px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.history-card .card-header h5 {
+  margin: 0;
+  font-weight: 600;
+  color: #333;
+}
+
+.history-card .table {
+  margin: 0;
+}
+
+.history-card .table thead {
+  background-color: #f1f3f5;
+}
+
+.history-card .table thead th {
+  border-bottom: 2px solid #dee2e6;
+  padding: 12px;
+  font-weight: 600;
+  color: #495057;
+  white-space: nowrap;
+}
+
+.history-card .table tbody td {
+  padding: 12px;
+  vertical-align: middle;
+}
+
+.history-card .table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Bank Header */
+.bank-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.bank-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #212529;
+}
+
+/* Button Styling */
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  font-weight: 600;
+  padding: 12px 24px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.btn-primary:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Badge Styling */
+.badge {
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Modal Styling */
+.modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+  padding: 20px 24px;
+}
+
+.modal-header.bg-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.modal-header.bg-success .btn-close {
+  filter: brightness(0) invert(1);
+}
+
+.modal-title {
+  font-weight: 600;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-footer {
+  border-top: 1px solid #e9ecef;
+  padding: 16px 24px;
+}
+
+/* Success Icon */
+.success-icon {
+  display: inline-block;
+  animation: successPulse 0.6s ease-in-out;
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Alert Styling */
+.alert {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Loading Container */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+/* Error Container */
+.error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  flex-direction: column;
+  color: #dc3545;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-state h5 {
+  color: #495057;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.empty-state p {
+  color: #6c757d;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+  .bank-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .bank-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .transfer-form-card,
+  .info-card {
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .history-card .table {
+    font-size: 0.85rem;
+  }
+
+  .history-card .table thead th,
+  .history-card .table tbody td {
+    padding: 8px;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.transfer-form-card,
+.info-card,
+.history-card {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Card Hover Effects */
+.card {
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Text Colors */
+.text-success {
+  color: #28a745 !important;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}
+
+/* Background Colors */
+.bg-light {
+  background-color: #f8f9fa !important;
+}

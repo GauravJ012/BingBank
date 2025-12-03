@@ -7,7 +7,9 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
-import Transactions from './components/Transactions'; 
+import Transactions from './components/Transactions';
+import FixedDeposits from './components/FixedDeposits'; 
+import FundTransfer from './components/FundTransfer';
 import PrivateRoute from './components/PrivateRoute';
 import authService from './services/authService';
 
@@ -66,6 +68,22 @@ function App() {
             element={
               <PrivateRoute>
                 <Transactions />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/fixed-deposits"
+            element={
+              <PrivateRoute>
+                <FixedDeposits />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/fund-transfer"
+            element={
+              <PrivateRoute>
+                <FundTransfer />
               </PrivateRoute>
             }
           />

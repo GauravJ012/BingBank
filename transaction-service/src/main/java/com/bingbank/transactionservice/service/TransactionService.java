@@ -7,6 +7,8 @@ import com.bingbank.transactionservice.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -76,6 +78,29 @@ public class TransactionService {
         return transactions.stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
+    }
+    
+    
+    
+    /**
+     * Create a new transaction (for FD operations)
+     */
+    public TransactionDTO createTransaction(String accountNumber, BigDecimal amount, String transactionType,
+                                           String sourceAccountNumber, String targetAccountNumber) {
+        System.out.println("TransactionService: Creating " + transactionType + " transaction for account: " + accountNumber);
+        
+        Transaction transaction = new Transaction();
+        transaction.setAccountNumber(accountNumber);
+        transaction.setAmount(amount);
+        transaction.setTransactionType(transactionType);
+        transaction.setTransactionDate(LocalDate.now());
+        transaction.setSourceAccountNumber(sourceAccountNumber);
+        transaction.setTargetAccountNumber(targetAccountNumber != null ? targetAccountNumber : "N/A");
+        
+        Transaction savedTransaction = transactionRepository.save(transaction);
+        System.out.println("TransactionService: Transaction created with ID: " + savedTransaction.getTransactionId());
+        
+        return mapToDTO(savedTransaction);
     }
 
     /**

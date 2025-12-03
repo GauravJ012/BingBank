@@ -15,10 +15,10 @@ import java.time.LocalDate;
 @Table(name = "transactions")
 public class Transaction {
     
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "transaction_id")
-    private Long transactionId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "transaction_id")
+	private Long transactionId;
     
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;

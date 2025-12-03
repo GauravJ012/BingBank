@@ -14,8 +14,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -202,6 +204,39 @@ public class TransactionController {
             System.err.println("Error generating PDF: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    
+    /**
+     * Create a new transaction (for FD operations)
+     */
+    @PostMapping("/create")
+    public ResponseEntity<?> createTransaction(@RequestBody Map<String, Object> request) {
+        try {
+            System.out.println("TransactionController: Create transaction request received");
+            
+            String accountNumber = request.get("accountNumber").toString();
+            BigDecimal amount = new BigDecimal(request.get("amount").toString());
+            String transactionType = request.get("transactionType").toString();
+            String sourceAccountNumber = request.get("sourceAccountNumber").toString();
+            String targetAccountNumber = request.getOrDefault("targetAccountNumber", "N/A").toString();
+            
+            TransactionDTO transaction = transactionService.createTransaction(
+                accountNumber, 
+                amount, 
+                transactionType, 
+                sourceAccountNumber, 
+                targetAccountNumber
+            );
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(transaction);
+        } catch (Exception e) {
+            System.err.println("TransactionController: Error creating transaction - " + e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
         }
     }
 }

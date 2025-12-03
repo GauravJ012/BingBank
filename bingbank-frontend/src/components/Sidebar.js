@@ -40,9 +40,6 @@ const Sidebar = () => {
     { path: '/fund-transfer', name: 'Fund Transfer', icon: <FaExchangeAlt size={20} /> },
     { path: '/cards', name: 'Cards', icon: <FaCreditCard size={20} /> },
     { path: '/fixed-deposits', name: 'Fixed Deposits', icon: <FaPiggyBank size={20} /> },
-    { path: '/insurance', name: 'Insurance', icon: <FaShieldAlt size={20} /> },
-    { path: '/loans', name: 'Loans', icon: <FaMoneyBillWave size={20} /> },
-    { path: '/settings', name: 'Settings', icon: <FaCog size={20} /> }
   ];
 
   const handleLogout = () => {

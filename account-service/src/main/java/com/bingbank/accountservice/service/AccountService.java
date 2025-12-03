@@ -9,6 +9,7 @@ import com.bingbank.accountservice.repository.BranchRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,6 +49,43 @@ public class AccountService {
      */
     public boolean accountExists(String accountNumber) {
         return accountRepository.existsByAccountNumber(accountNumber);
+    }
+    
+    
+    /**
+     * Debit amount from account
+     */
+    public AccountDTO debitFromAccount(String accountNumber, BigDecimal amount, String description) {
+        System.out.println("AccountService: Debiting " + amount + " from account: " + accountNumber);
+        
+        Account account = accountRepository.findById(accountNumber)
+                .orElseThrow(() -> new RuntimeException("Account not found: " + accountNumber));
+        
+        if (account.getBalance().compareTo(amount) < 0) {
+            throw new RuntimeException("Insufficient balance in account");
+        }
+        
+        account.setBalance(account.getBalance().subtract(amount));
+        Account updatedAccount = accountRepository.save(account);
+        
+        System.out.println("AccountService: Debit successful. New balance: " + updatedAccount.getBalance());
+        return mapToDTO(updatedAccount);
+    }
+
+    /**
+     * Credit amount to account
+     */
+    public AccountDTO creditToAccount(String accountNumber, BigDecimal amount, String description) {
+        System.out.println("AccountService: Crediting " + amount + " to account: " + accountNumber);
+        
+        Account account = accountRepository.findById(accountNumber)
+                .orElseThrow(() -> new RuntimeException("Account not found: " + accountNumber));
+        
+        account.setBalance(account.getBalance().add(amount));
+        Account updatedAccount = accountRepository.save(account);
+        
+        System.out.println("AccountService: Credit successful. New balance: " + updatedAccount.getBalance());
+        return mapToDTO(updatedAccount);
     }
 
     /**
