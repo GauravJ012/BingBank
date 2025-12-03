@@ -17,7 +17,7 @@ const Transactions = () => {
   const [tableLoading, setTableLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Filter states
+  // Filter states (removed sortBy and sortDirection)
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
@@ -25,9 +25,7 @@ const Transactions = () => {
     maxAmount: '',
     transactionType: '',
     otherAccountNumber: '',
-    limit: '',
-    sortBy: 'transactionDate',
-    sortDirection: 'DESC'
+    limit: ''
   });
 
   useEffect(() => {
@@ -53,7 +51,7 @@ const Transactions = () => {
         if (accounts && accounts.length > 0) {
           setAccount(accounts[0]);
           
-          // Get all transactions
+          // Get all transactions (already sorted by transaction_id DESC)
           const allTransactions = await transactionService.getAllTransactions(accounts[0].accountNumber);
           setTransactions(allTransactions);
           setFilteredTransactions(allTransactions);
@@ -95,9 +93,7 @@ const Transactions = () => {
         maxAmount: filters.maxAmount ? parseFloat(filters.maxAmount) : null,
         transactionType: filters.transactionType || null,
         otherAccountNumber: filters.otherAccountNumber || null,
-        limit: filters.limit ? parseInt(filters.limit) : null,
-        sortBy: filters.sortBy,
-        sortDirection: filters.sortDirection
+        limit: filters.limit ? parseInt(filters.limit) : null
       };
 
       const filtered = await transactionService.getFilteredTransactions(filterRequest);
@@ -119,51 +115,11 @@ const Transactions = () => {
       maxAmount: '',
       transactionType: '',
       otherAccountNumber: '',
-      limit: '',
-      sortBy: 'transactionDate',
-      sortDirection: 'DESC'
+      limit: ''
     });
     setFilteredTransactions(transactions);
     setSelectedTransactions([]);
     setError(null);
-  };
-
-  const handleSort = async (column) => {
-    const newDirection = filters.sortBy === column && filters.sortDirection === 'ASC' ? 'DESC' : 'ASC';
-    
-    const updatedFilters = {
-      ...filters,
-      sortBy: column,
-      sortDirection: newDirection
-    };
-    
-    setFilters(updatedFilters);
-    
-    if (!account) return;
-
-    try {
-      setTableLoading(true);
-      const filterRequest = {
-        accountNumber: account.accountNumber,
-        startDate: updatedFilters.startDate || null,
-        endDate: updatedFilters.endDate || null,
-        minAmount: updatedFilters.minAmount ? parseFloat(updatedFilters.minAmount) : null,
-        maxAmount: updatedFilters.maxAmount ? parseFloat(updatedFilters.maxAmount) : null,
-        transactionType: updatedFilters.transactionType || null,
-        otherAccountNumber: updatedFilters.otherAccountNumber || null,
-        limit: updatedFilters.limit ? parseInt(updatedFilters.limit) : null,
-        sortBy: updatedFilters.sortBy,
-        sortDirection: updatedFilters.sortDirection
-      };
-
-      const filtered = await transactionService.getFilteredTransactions(filterRequest);
-      setFilteredTransactions(filtered);
-      setSelectedTransactions([]);
-      setTableLoading(false);
-    } catch (err) {
-      console.error("Error sorting transactions:", err);
-      setTableLoading(false);
-    }
   };
 
   const handleSelectTransaction = (transactionId) => {
@@ -201,11 +157,6 @@ const Transactions = () => {
       console.error("Error downloading statement:", err);
       alert("Failed to download statement. Please try again.");
     }
-  };
-
-  const getSortIcon = (column) => {
-    if (filters.sortBy !== column) return '⇅';
-    return filters.sortDirection === 'ASC' ? '↑' : '↓';
   };
 
   if (loading) {
@@ -430,18 +381,10 @@ const Transactions = () => {
                   <thead>
                     <tr>
                       <th style={{ width: '50px' }}>Select</th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => handleSort('transactionDate')}>
-                        Date {getSortIcon('transactionDate')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => handleSort('transactionId')}>
-                        ID {getSortIcon('transactionId')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => handleSort('transactionType')}>
-                        Type {getSortIcon('transactionType')}
-                      </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => handleSort('amount')}>
-                        Amount {getSortIcon('amount')}
-                      </th>
+                      <th>Date</th>
+                      <th>ID</th>
+                      <th>Type</th>
+                      <th>Amount</th>
                       <th>From Account</th>
                       <th>To Account</th>
                     </tr>

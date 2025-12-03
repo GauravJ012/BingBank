@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   FaHome, FaExchangeAlt, FaHistory, FaCreditCard, 
-  FaPiggyBank, FaShieldAlt, FaMoneyBillWave, FaCog, 
-  FaSignOutAlt, FaBars, FaChevronLeft
+  FaPiggyBank, FaSignOutAlt, FaBars, FaChevronLeft
 } from 'react-icons/fa';
 import '../styles/Sidebar.css';
 import authService from '../services/authService';
+import logo from '../assets/logo.png';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -53,8 +53,7 @@ const Sidebar = () => {
       </div>
       
       <div className="logo-container">
-        <div className="bank-logo">B</div>
-        <h2>BingBank</h2>
+        <img src={logo} alt="BingBank" className="bank-logo-img" />
       </div>
       
       <div className="menu">

@@ -20,41 +20,39 @@ public class TransactionService {
 
     /**
      * Get latest 5 transactions for an account (for dashboard)
+     * Sorted by transaction_id DESC
      */
     public List<TransactionDTO> getLatestTransactions(String accountNumber) {
         System.out.println("TransactionService: Fetching latest 5 transactions for account: " + accountNumber);
         List<Transaction> transactions = transactionRepository
-                .findTop5ByAccountNumberOrderByTransactionDateDesc(accountNumber);
+                .findTop5ByAccountNumberOrderByTransactionIdDesc(accountNumber);
+        
+        // Take only first 5
         return transactions.stream()
+                .limit(5)
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
     /**
      * Get all transactions for an account
+     * Sorted by transaction_id DESC
      */
     public List<TransactionDTO> getAllTransactions(String accountNumber) {
         System.out.println("TransactionService: Fetching all transactions for account: " + accountNumber);
         List<Transaction> transactions = transactionRepository
-                .findByAccountNumberOrderByTransactionDateDesc(accountNumber);
+                .findByAccountNumberOrderByTransactionIdDesc(accountNumber);
         return transactions.stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Get filtered and sorted transactions
+     * Get filtered transactions
+     * Sorted by transaction_id DESC
      */
     public List<TransactionDTO> getFilteredTransactions(TransactionFilterRequest request) {
         System.out.println("TransactionService: Fetching filtered transactions");
-        
-        // Set defaults
-        if (request.getSortBy() == null) {
-            request.setSortBy("transactionDate");
-        }
-        if (request.getSortDirection() == null) {
-            request.setSortDirection("DESC");
-        }
         
         List<Transaction> transactions = transactionRepository.findFilteredTransactions(
                 request.getAccountNumber(),
@@ -63,9 +61,7 @@ public class TransactionService {
                 request.getMinAmount(),
                 request.getMaxAmount(),
                 request.getTransactionType(),
-                request.getOtherAccountNumber(),
-                request.getSortBy(),
-                request.getSortDirection()
+                request.getOtherAccountNumber()
         );
         
         // Apply limit if specified
@@ -80,10 +76,8 @@ public class TransactionService {
                 .collect(Collectors.toList());
     }
     
-    
-    
     /**
-     * Create a new transaction (for FD operations)
+     * Create a new transaction
      */
     public TransactionDTO createTransaction(String accountNumber, BigDecimal amount, String transactionType,
                                            String sourceAccountNumber, String targetAccountNumber) {

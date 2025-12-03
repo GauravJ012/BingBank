@@ -86,7 +86,7 @@ const Dashboard = () => {
           console.error("Error fetching account data:", err);
         }
         
-        // Fetch latest 5 transactions from TRANSACTION SERVICE
+        // Fetch latest 5 transactions from TRANSACTION SERVICE (already sorted by transaction_id DESC)
         if (accountNumber) {
           console.log("Fetching latest transactions for account:", accountNumber);
           try {

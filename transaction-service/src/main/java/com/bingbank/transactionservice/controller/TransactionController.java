@@ -55,7 +55,7 @@ public class TransactionController {
     }
 
     /**
-     * Get filtered and sorted transactions
+     * Get filtered transactions
      */
     @PostMapping("/filter")
     public ResponseEntity<List<TransactionDTO>> getFilteredTransactions(
@@ -207,9 +207,8 @@ public class TransactionController {
         }
     }
     
-    
     /**
-     * Create a new transaction (for FD operations)
+     * Create a new transaction
      */
     @PostMapping("/create")
     public ResponseEntity<?> createTransaction(@RequestBody Map<String, Object> request) {

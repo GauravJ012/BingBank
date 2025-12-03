@@ -10,6 +10,7 @@ import Dashboard from './components/Dashboard';
 import Transactions from './components/Transactions';
 import FixedDeposits from './components/FixedDeposits'; 
 import FundTransfer from './components/FundTransfer';
+import Cards from './components/Cards';
 import PrivateRoute from './components/PrivateRoute';
 import authService from './services/authService';
 
@@ -84,6 +85,14 @@ function App() {
             element={
               <PrivateRoute>
                 <FundTransfer />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/cards"
+            element={
+              <PrivateRoute>
+                <Cards />
               </PrivateRoute>
             }
           />
