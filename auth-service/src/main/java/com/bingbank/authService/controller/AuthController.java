@@ -7,7 +7,12 @@ import com.bingbank.authService.dto.RegisterRequest;
 import com.bingbank.authService.dto.VerifyOTPRequest;
 import com.bingbank.authService.model.Customer;
 import com.bingbank.authService.service.AuthService;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,5 +49,20 @@ public class AuthController {
     @GetMapping("/customer/{customerId}")
     public ResponseEntity<?> getCustomerDetails(@PathVariable Long customerId) {
         return authService.getCustomerDetails(customerId);
+    }
+    
+    /**
+     * Verify registration OTP
+     */
+    @PostMapping("/verify-registration-otp")
+    public ResponseEntity<?> verifyRegistrationOTP(@RequestBody VerifyOTPRequest request) {
+        try {
+            System.out.println("AuthController: Verifying registration OTP for email: " + request.getEmail());
+            return authService.verifyRegistrationOTP(request);
+        } catch (Exception e) {
+            System.err.println("AuthController: Error verifying registration OTP - " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Registration verification failed: " + e.getMessage());
+        }
     }
 }

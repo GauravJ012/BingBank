@@ -21,6 +21,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,10 +41,15 @@ public class CreditCardService {
      */
     public CreditCardDTO getCreditCardByCustomerId(Long customerId) {
         System.out.println("CreditCardService: Fetching credit card for customer: " + customerId);
+
+        Optional<CreditCard> cardOptional = creditCardRepository.findByCustomerId(customerId);
         
-        CreditCard card = creditCardRepository.findByCustomerId(customerId)
-                .orElseThrow(() -> new RuntimeException("Credit card not found for customer"));
-        
+        if (cardOptional.isEmpty()) {
+            System.out.println("CreditCardService: No credit card found for customer: " + customerId);
+            return null; // Return null instead of throwing exception
+        }
+
+        CreditCard card = cardOptional.get();
         return mapToDTO(card);
     }
 

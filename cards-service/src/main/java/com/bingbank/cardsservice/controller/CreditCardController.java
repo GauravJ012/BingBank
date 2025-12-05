@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,10 +40,20 @@ public class CreditCardController {
         try {
             System.out.println("CreditCardController: Fetching credit card for customer: " + customerId);
             CreditCardDTO card = creditCardService.getCreditCardByCustomerId(customerId);
+            
+            if (card == null) {
+                // Return a response indicating no card found
+                Map<String, Object> response = new HashMap<>();
+                response.put("found", false);
+                response.put("message", "No credit card found for customer");
+                return ResponseEntity.ok(response);
+            }
+            
             return ResponseEntity.ok(card);
         } catch (Exception e) {
             System.err.println("CreditCardController: Error - " + e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 

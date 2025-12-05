@@ -25,7 +25,7 @@ const login = async (email, password) => {
 };
 
 /**
- * Verify OTP code
+ * Verify OTP code (for login)
  * @param {string} email 
  * @param {string} otp 
  * @returns {Promise}
@@ -84,10 +84,35 @@ const verifyOTP = async (email, otp) => {
  */
 const register = async (userData) => {
   try {
+    if (debug) console.log('Registering new user:', userData);
     const response = await axios.post(`${API_URL}/register`, userData);
+    if (debug) console.log('Registration response:', response);
     return response;
   } catch (error) {
+    console.error('Registration error:', error);
     throw error.response?.data || error.message || 'Registration failed';
+  }
+};
+
+/**
+ * Verify registration OTP
+ * @param {string} email 
+ * @param {string} otp 
+ * @returns {Promise}
+ */
+const verifyRegistrationOTP = async (email, otp) => {
+  try {
+    if (debug) console.log('Verifying registration OTP for:', email);
+    const response = await axios.post(`${API_URL}/verify-registration-otp`, { 
+      email: email, 
+      otp: otp 
+    });
+    if (debug) console.log('Registration OTP verification response:', response);
+    
+    return response;
+  } catch (error) {
+    console.error('Registration OTP verification error:', error);
+    throw error.response?.data || error.message || 'Registration OTP verification failed';
   }
 };
 
@@ -121,6 +146,15 @@ const getCustomerDetails = async (customerId) => {
     // Don't throw here - let the component handle the fallback
     return { data: null };
   }
+};
+
+/**
+ * Get customer by ID (alias for getCustomerDetails)
+ * @param {number} customerId 
+ * @returns {Promise}
+ */
+const getCustomerById = async (customerId) => {
+  return getCustomerDetails(customerId);
 };
 
 /**
@@ -254,8 +288,10 @@ const authService = {
   login,
   verifyOTP,
   register,
+  verifyRegistrationOTP, // Added this function
   enable2FA,
   getCustomerDetails,
+  getCustomerById, // Added this alias
   isAuthenticated,
   getUser,
   getToken,

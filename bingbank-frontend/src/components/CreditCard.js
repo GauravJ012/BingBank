@@ -12,6 +12,7 @@ const CreditCard = ({ customerId }) => {
   const [loading, setLoading] = useState(true);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [notFound, setNotFound] = useState(false);
 
   // Modal states
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -39,31 +40,53 @@ const CreditCard = ({ customerId }) => {
   }, [customerId]);
 
   const loadCreditCard = async () => {
+  try {
+    setLoading(true);
+    setError(null);
+    setNotFound(false);
+    
+    // Load account details first (always load regardless of card status)
     try {
-      setLoading(true);
-      
-      // Load credit card
-      const card = await cardsService.getCreditCard(customerId);
-      setCreditCard(card);
-
-      // Load account details
       const accounts = await accountService.getAccountsByCustomerId(customerId);
       if (accounts && accounts.length > 0) {
         setAccount(accounts[0]);
       }
+    } catch (accErr) {
+      console.error("Error loading account:", accErr);
+    }
+    
+    // Load credit card
+    const cardResponse = await cardsService.getCreditCard(customerId);
+    
+    // Check if card was found
+    if (cardResponse && cardResponse.found === false) {
+      setNotFound(true);
+      setCreditCard(null);
+      setTransactions([]);
+      setFilteredTransactions([]);
+    } else if (cardResponse) {
+      setCreditCard(cardResponse);
+      setNotFound(false);
 
       // Load transactions
-      const txns = await cardsService.getCreditCardTransactions(card.cardId);
-      setTransactions(txns);
-      setFilteredTransactions(txns);
-      
-      setLoading(false);
-    } catch (err) {
-      console.error("Error loading credit card:", err);
-      setError("Failed to load credit card");
-      setLoading(false);
+      try {
+        const txns = await cardsService.getCreditCardTransactions(cardResponse.cardId);
+        setTransactions(txns);
+        setFilteredTransactions(txns);
+      } catch (txnErr) {
+        console.error("Error loading transactions:", txnErr);
+        setTransactions([]);
+        setFilteredTransactions([]);
+      }
     }
-  };
+    
+    setLoading(false);
+  } catch (err) {
+    console.error("Error loading credit card:", err);
+    setError("Failed to load credit card");
+    setLoading(false);
+  }
+};
 
   const handlePaymentClick = () => {
     setPaymentAmount('');
@@ -217,6 +240,23 @@ const CreditCard = ({ customerId }) => {
       <div className="text-center py-5">
         <Spinner animation="border" />
         <p className="mt-3">Loading credit card...</p>
+      </div>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <div className="text-center py-5">
+        <Alert variant="info">
+          <Alert.Heading>No Credit Card Found</Alert.Heading>
+          <p className="mb-0">
+            No credit card on file for Account Number: <strong>{account ? account.accountNumber : 'N/A'}</strong>
+          </p>
+          <hr />
+          <p className="mb-0 text-muted">
+            Please contact customer support to apply for a credit card.
+          </p>
+        </Alert>
       </div>
     );
   }

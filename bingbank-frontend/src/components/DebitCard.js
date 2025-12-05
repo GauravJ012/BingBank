@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Button, Modal, Form, Alert, Spinner } from 'react-bootstrap';
 import cardsService from '../services/cardsService';
+import accountService from '../services/accountService';
 import logo from '../assets/logo.png';
 
 const DebitCard = ({ customerId }) => {
   const [debitCard, setDebitCard] = useState(null);
+  const [account, setAccount] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notFound, setNotFound] = useState(false);
 
   // Modal states
   const [showPinModal, setShowPinModal] = useState(false);
@@ -22,13 +25,37 @@ const DebitCard = ({ customerId }) => {
 
   useEffect(() => {
     loadDebitCard();
+    loadAccount();
   }, [customerId]);
+
+  const loadAccount = async () => {
+    try {
+      const accounts = await accountService.getAccountsByCustomerId(customerId);
+      if (accounts && accounts.length > 0) {
+        setAccount(accounts[0]);
+      }
+    } catch (err) {
+      console.error("Error loading account:", err);
+    }
+  };
 
   const loadDebitCard = async () => {
     try {
       setLoading(true);
-      const card = await cardsService.getDebitCard(customerId);
-      setDebitCard(card);
+      setError(null);
+      setNotFound(false);
+      
+      const response = await cardsService.getDebitCard(customerId);
+      
+      // Check if card was found
+      if (response && response.found === false) {
+        setNotFound(true);
+        setDebitCard(null);
+      } else if (response) {
+        setDebitCard(response);
+        setNotFound(false);
+      }
+      
       setLoading(false);
     } catch (err) {
       console.error("Error loading debit card:", err);
@@ -128,6 +155,23 @@ const DebitCard = ({ customerId }) => {
       <div className="text-center py-5">
         <Spinner animation="border" />
         <p className="mt-3">Loading debit card...</p>
+      </div>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <div className="text-center py-5">
+        <Alert variant="info">
+          <Alert.Heading>No Debit Card Found</Alert.Heading>
+          <p className="mb-0">
+            No debit card on file for Account Number: <strong>{account ? account.accountNumber : 'N/A'}</strong>
+          </p>
+          <hr />
+          <p className="mb-0 text-muted">
+            Please contact customer support to apply for a debit card.
+          </p>
+        </Alert>
       </div>
     );
   }

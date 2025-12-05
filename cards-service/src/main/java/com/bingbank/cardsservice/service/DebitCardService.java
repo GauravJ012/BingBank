@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 @Service
 public class DebitCardService {
@@ -30,11 +31,15 @@ public class DebitCardService {
      */
     public DebitCardDTO getDebitCardByCustomerId(Long customerId) {
         System.out.println("DebitCardService: Fetching debit card for customer: " + customerId);
+
+        Optional<DebitCard> cardOptional = debitCardRepository.findByCustomerId(customerId);
         
-        DebitCard card = debitCardRepository.findByCustomerId(customerId)
-                .orElseThrow(() -> new RuntimeException("Debit card not found for customer"));
-        
-        return mapToDTO(card);
+        if (cardOptional.isEmpty()) {
+            System.out.println("DebitCardService: No debit card found for customer: " + customerId);
+            return null; // Return null instead of throwing exception
+        }
+
+        return mapToDTO(cardOptional.get());
     }
 
     /**
