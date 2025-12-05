@@ -65,4 +65,80 @@ public class AuthController {
                     .body("Registration verification failed: " + e.getMessage());
         }
     }
+    
+    
+    /**
+     * Request password reset OTP
+     */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> requestPasswordReset(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            System.out.println("AuthController: Password reset requested for email: " + email);
+            
+            authService.requestPasswordReset(email);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "OTP has been sent to your email");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println("AuthController: Error requesting password reset - " + e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
+    /**
+     * Verify password reset OTP
+     */
+    @PostMapping("/verify-reset-otp")
+    public ResponseEntity<?> verifyPasswordResetOTP(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            String otp = request.get("otp");
+            System.out.println("AuthController: Verifying password reset OTP for email: " + email);
+            
+            boolean isValid = authService.verifyPasswordResetOTP(email, otp);
+            
+            if (isValid) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", true);
+                response.put("message", "OTP verified successfully");
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "message", "Invalid or expired OTP"));
+            }
+        } catch (Exception e) {
+            System.err.println("AuthController: Error verifying reset OTP - " + e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
+    /**
+     * Reset password
+     */
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            String otp = request.get("otp");
+            String newPassword = request.get("newPassword");
+            System.out.println("AuthController: Resetting password for email: " + email);
+            
+            authService.resetPassword(email, otp, newPassword);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Password reset successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println("AuthController: Error resetting password - " + e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+    
 }

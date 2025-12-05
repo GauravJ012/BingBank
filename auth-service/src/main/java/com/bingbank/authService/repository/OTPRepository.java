@@ -18,4 +18,10 @@ public interface OTPRepository extends JpaRepository<OTP, Long> {
     
     Optional<OTP> findByCustomerAndOtpCodeAndPurposeAndVerifiedFalseAndExpiresAtGreaterThan(
             Customer customer, String otpCode, String purpose, LocalDateTime now);
+    
+ // Add this method - without the verified check
+    Optional<OTP> findByCustomerAndOtpCodeAndPurposeAndExpiresAtGreaterThan(
+            Customer customer, String otpCode, String purpose, LocalDateTime now);
 }
+
+

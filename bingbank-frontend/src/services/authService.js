@@ -117,6 +117,64 @@ const verifyRegistrationOTP = async (email, otp) => {
 };
 
 /**
+ * Request password reset OTP
+ * @param {string} email 
+ * @returns {Promise}
+ */
+const requestPasswordReset = async (email) => {
+  try {
+    if (debug) console.log('Requesting password reset for:', email);
+    const response = await axios.post(`${API_URL}/forgot-password`, { email });
+    if (debug) console.log('Password reset request response:', response);
+    return response;
+  } catch (error) {
+    console.error('Password reset request error:', error);
+    throw error.response?.data || error.message || 'Failed to request password reset';
+  }
+};
+
+/**
+ * Verify password reset OTP
+ * @param {string} email 
+ * @param {string} otp 
+ * @returns {Promise}
+ */
+const verifyPasswordResetOTP = async (email, otp) => {
+  try {
+    if (debug) console.log('Verifying password reset OTP for:', email);
+    const response = await axios.post(`${API_URL}/verify-reset-otp`, { email, otp });
+    if (debug) console.log('OTP verification response:', response);
+    return response;
+  } catch (error) {
+    console.error('OTP verification error:', error);
+    throw error.response?.data || error.message || 'Failed to verify OTP';
+  }
+};
+
+/**
+ * Reset password
+ * @param {string} email 
+ * @param {string} otp 
+ * @param {string} newPassword 
+ * @returns {Promise}
+ */
+const resetPassword = async (email, otp, newPassword) => {
+  try {
+    if (debug) console.log('Resetting password for:', email);
+    const response = await axios.post(`${API_URL}/reset-password`, { 
+      email, 
+      otp, 
+      newPassword 
+    });
+    if (debug) console.log('Password reset response:', response);
+    return response;
+  } catch (error) {
+    console.error('Password reset error:', error);
+    throw error.response?.data || error.message || 'Failed to reset password';
+  }
+};
+
+/**
  * Get customer details by ID
  * @param {number} customerId 
  * @returns {Promise}
@@ -288,15 +346,18 @@ const authService = {
   login,
   verifyOTP,
   register,
-  verifyRegistrationOTP, // Added this function
+  verifyRegistrationOTP,
+  requestPasswordReset,      // ADDED
+  verifyPasswordResetOTP,    // ADDED
+  resetPassword,             // ADDED
   enable2FA,
   getCustomerDetails,
-  getCustomerById, // Added this alias
+  getCustomerById,
   isAuthenticated,
   getUser,
   getToken,
   logout,
-  authAxios // Export the authenticated axios instance
+  authAxios
 };
 
 export default authService;

@@ -7,8 +7,10 @@ import com.bingbank.authService.dto.LoginRequest;
 import com.bingbank.authService.dto.RegisterRequest;
 import com.bingbank.authService.dto.VerifyOTPRequest;
 import com.bingbank.authService.model.Customer;
+import com.bingbank.authService.model.OTP;
 import com.bingbank.authService.model.PendingRegistration;
 import com.bingbank.authService.repository.CustomerRepository;
+import com.bingbank.authService.repository.OTPRepository;
 import com.bingbank.authService.repository.PendingRegistrationRepository;
 import com.bingbank.authService.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,7 @@ import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
@@ -58,6 +61,9 @@ public class AuthService {
     
     @Autowired
     private EmailService emailService;
+    
+    @Autowired
+    private OTPRepository otpRepository;
 
     public ResponseEntity<?> login(LoginRequest loginRequest) {
         try {
@@ -283,6 +289,93 @@ public class AuthService {
             return ResponseEntity.badRequest().body("Error retrieving customer details: " + e.getMessage());
         }
     }
+
+    /**
+     * Request password reset using OTP table
+     */
+    @Transactional
+    public void requestPasswordReset(String email) {
+        System.out.println("AuthService: Requesting password reset for email: " + email);
+        
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("No account found with this email"));
+        
+        // Generate OTP
+        String otpCode = generateOTP();
+        
+        // Create new OTP entry
+        OTP otp = new OTP();
+        otp.setCustomer(customer);
+        otp.setOtpCode(otpCode);
+        otp.setPurpose("PASSWORD_RESET");
+        otp.setExpiresAt(LocalDateTime.now().plusMinutes(10));
+        otp.setVerified(false);
+        
+        otpRepository.save(otp);
+        
+        // Send OTP email
+        emailService.sendPasswordResetOTP(email, otpCode, customer.getFirstName());
+        
+        System.out.println("AuthService: Password reset OTP sent successfully");
+    }
+
+    /**
+     * Verify password reset OTP using OTP table
+     */
+    public boolean verifyPasswordResetOTP(String email, String otpCode) {
+        System.out.println("AuthService: Verifying password reset OTP for email: " + email);
+        
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        
+        OTP otp = otpRepository.findByCustomerAndOtpCodeAndPurposeAndVerifiedFalseAndExpiresAtGreaterThan(
+                customer,
+                otpCode,
+                "PASSWORD_RESET",
+                LocalDateTime.now()
+        ).orElseThrow(() -> new RuntimeException("Invalid or expired OTP"));
+        
+        // Mark OTP as verified (but don't delete it yet - we need it for password reset)
+        otp.setVerified(true);
+        otpRepository.save(otp);
+        
+        System.out.println("AuthService: Password reset OTP verified successfully");
+        return true;
+    }
+
+    /**
+     * Reset password using OTP table
+     */
+    @Transactional
+    public void resetPassword(String email, String otpCode, String newPassword) {
+        System.out.println("AuthService: Resetting password for email: " + email);
+        
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        
+        // Find the verified OTP (verified = true means it passed step 2)
+        OTP otp = otpRepository.findByCustomerAndOtpCodeAndPurposeAndExpiresAtGreaterThan(
+                customer,
+                otpCode,
+                "PASSWORD_RESET",
+                LocalDateTime.now()
+        ).orElseThrow(() -> new RuntimeException("Invalid or expired OTP"));
+        
+        // Check if OTP was verified in previous step
+        if (!otp.getVerified()) {
+            throw new RuntimeException("OTP not verified. Please verify OTP first.");
+        }
+        
+        // Encode new password
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        customer.setPassword(encodedPassword);
+        customerRepository.save(customer);
+        
+        // Delete the used OTP
+        otpRepository.delete(otp);
+        
+        System.out.println("AuthService: Password reset successfully");
+    }
     
     // Helper method to generate OTP
     private String generateOTP() {
@@ -290,4 +383,5 @@ public class AuthService {
         int otp = 100000 + random.nextInt(900000);
         return String.valueOf(otp);
     }
+   
 }

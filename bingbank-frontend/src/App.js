@@ -11,6 +11,7 @@ import Transactions from './components/Transactions';
 import FixedDeposits from './components/FixedDeposits'; 
 import FundTransfer from './components/FundTransfer';
 import Cards from './components/Cards';
+import ForgotPassword from './components/ForgotPassword';
 import PrivateRoute from './components/PrivateRoute';
 import authService from './services/authService';
 
@@ -96,6 +97,7 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           {/* Add routes for other pages here, all protected with PrivateRoute */}
         </Routes>
       </div>

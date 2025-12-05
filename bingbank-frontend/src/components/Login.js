@@ -132,9 +132,9 @@ const Login = () => {
                         label="Remember me" 
                         id="remember-me"
                       />
-                      <a href="#forgot-password" className="forgot-password">
+                      <Link to="/forgot-password" className="forgot-password">
                         Forgot Password?
-                      </a>
+                      </Link>
                     </div>
                     
                     <div className="d-grid gap-2">
